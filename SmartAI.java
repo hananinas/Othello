@@ -1,41 +1,62 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class SmartAI implements IOthelloAI {
 
     @Override
     public Position decideMove(GameState s) {
-
-        ArrayList<Position> moves = s.legalMoves(); // this stores the moves made by the ai and what postion we have
-                                                    // used and then we
         if (s.getPlayerInTurn() == 1) {
-            MiniMax(s, 3, true);
+            return MiniMax(s, s.legalMoves().getLast(), 3, true);
         } else {
-            MiniMax(s, 3, false);
+            return MiniMax(s, s.legalMoves().getLast(), 3, false);
         }
-
-        if (!moves.isEmpty())
-            return moves.get(0);
-        else
-            return new Position(4, 1); // this function is just a simple ai that goes one postion down and up
-
     }
 
-    public Position MiniMax(GameState s, int depth, boolean isMaximizingPlayer) {
-        if (depth == 0 || s.isFinished()) {
-            return new Position(-1, -1);
+    public Position MiniMax(GameState s, Position position, int depth, boolean isMaximizingPlayer) {
+        if (depth == 0 || !s.legalMoves().isEmpty()) {
+            return s.legalMoves().get(0);
         }
 
         if (isMaximizingPlayer) {
             Position max = new Position(Integer.MIN_VALUE, Integer.MIN_VALUE);
-            for (Position position : s.legalMoves()) {
-                Position eval = MiniMax(s, depth - 1, false);
-
+            for (Position position1 : s.legalMoves()) {
+                Position eval = MiniMax(s, position1, depth - 1, false);
+                max = findMax(max, eval);
             }
+            return max;
+        } else {
+            Position min = new Position(Integer.MAX_VALUE, Integer.MAX_VALUE);
+            for (Position position2 : s.legalMoves()) {
+                Position eval = MiniMax(s, position2, depth - 1, true);
+                min = findMin(min, eval);
+            }
+            return min;
         }
 
-        return null;
-        // TODO Auto-generated method stub
+    }
 
+    public Position findMax(Position max, Position child) {
+        Position newMax = max;
+        if (child.row > max.row) {
+            newMax.row = child.row;
+        }
+        if (child.col > max.col) {
+            newMax.col = child.col;
+        }
+
+        return newMax;
+    }
+
+    public Position findMin(Position min, Position child) {
+        Position newMin = min;
+        if (child.row < min.row) {
+            newMin.row = child.row;
+        }
+        if (child.col < min.col) {
+            newMin.col = child.col;
+        }
+
+        return newMin;
     }
 
 }

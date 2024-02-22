@@ -1,4 +1,3 @@
-import java.io.Console;
 import java.util.ArrayList;
 
 /**
@@ -14,14 +13,11 @@ public class DumAI implements IOthelloAI {
 	 * Returns first legal move
 	 */
 	public Position decideMove(GameState s) {
-		ArrayList<Position> moves = s.legalMoves(); // this stores the moves made by the ai and what postion we have
-													// used and then we
-
+		ArrayList<Position> moves = s.legalMoves();
 		if (!moves.isEmpty())
 			return moves.get(0);
 		else
-			return new Position(-1, -1); // this function is just a simple ai that goes one postion down and up
-
+			return new Position(-1, -1);
 	}
 
 }
