@@ -14,7 +14,9 @@ public class DumAI implements IOthelloAI {
 	 * Returns first legal move
 	 */
 	public Position decideMove(GameState s) {
-		ArrayList<Position> moves = s.legalMoves();
+		ArrayList<Position> moves = s.legalMoves(); // this stores the moves made by the ai and what postion we have
+													// used and then we
+
 		if (!moves.isEmpty())
 			return moves.get(0);
 		else
