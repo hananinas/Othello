@@ -1,63 +1,76 @@
 import java.util.ArrayList;
-import java.util.List;
 
 public class SmartAI implements IOthelloAI {
 
     @Override
     public Position decideMove(GameState s) {
 
-        if (s.getPlayerInTurn() == 1) {
-            return MiniMax(s, s.legalMoves().getLast(), 4, true);
-        } else {
-            return MiniMax(s, s.legalMoves().getLast(), 4, false);
-        }
+        ArrayList<Position> moves = s.legalMoves();
+
+        if (!moves.isEmpty())
+            return moves.get(0);
+        else
+            return MaxValue(s).getPosition();
     }
 
-    public Position MiniMax(GameState s, Position position, int depth, boolean isMaximizingPlayer) {
-        if (depth == 0 || s.isFinished()) {
-            return s.legalMoves().get(0);
-        } else if (isMaximizingPlayer) {
-            Position max = new Position(Integer.MIN_VALUE, Integer.MIN_VALUE);
-            for (Position position1 : s.legalMoves()) {
-                Position eval = MiniMax(s, position1, depth - 1, false);
-                max = findMax(max, eval);
+    private Pair<Utility, Position> MaxValue(GameState s) {
 
+        Position move = null;
+        Utility v = new Utility(s, this);
+
+        if (s.isFinished()) {
+            return new Pair<Utility, Position>(v, new Position(0, 0));
+        }
+
+        v.setHeuristic(Integer.MIN_VALUE);
+
+        for (Position action : s.legalMoves()) {
+            Pair<Utility, Position> pair = MinValue(Result(s, action));
+
+            if (pair.getUtility().getHeuristic() > v.getHeuristic()) {
+                v.setHeuristic(pair.getUtility().getHeuristic());
+                move = pair.getPosition();
             }
-            return max;
-        } else {
-            Position min = new Position(Integer.MAX_VALUE, Integer.MAX_VALUE);
-            for (Position position2 : s.legalMoves()) {
-                Position eval = MiniMax(s, position2, depth - 1, true);
-                min = findMin(min, eval);
+        }
+
+        return new Pair<Utility, Position>(v, move);
+    }
+
+    private Pair<Utility, Position> MinValue(GameState s) {
+
+        Position move = null;
+        Utility v = new Utility(s, this);
+
+        if (s.isFinished()) {
+            return new Pair<Utility, Position>(v, new Position(0, 0));
+        }
+
+        v.setHeuristic(Integer.MAX_VALUE);
+
+        for (Position action : s.legalMoves()) {
+            Pair<Utility, Position> pair = MaxValue(Result(s, action));
+
+            if (pair.getUtility().getHeuristic() < v.getHeuristic()) {
+                v.setHeuristic(pair.getUtility().getHeuristic());
+                move = pair.getPosition();
             }
-
-            return min;
         }
+
+        return new Pair<Utility, Position>(v, move);
 
     }
 
-    public Position findMax(Position max, Position child) {
-        Position newMax = max;
-        if (child.row > max.row) {
-            newMax.row = child.row;
-        }
-        if (child.col > max.col) {
-            newMax.col = child.col;
+    public GameState Result(GameState s, Position position) {
+
+        if (position == null) {
+            return s;
         }
 
-        return newMax;
-    }
+        GameState newState = new GameState(s.getBoard(), s.currentPlayer);
 
-    public Position findMin(Position min, Position child) {
-        Position newMin = min;
-        if (child.row < min.row) {
-            newMin.row = child.row;
-        }
-        if (child.col < min.col) {
-            newMin.col = child.col;
-        }
+        newState.insertToken(position);
 
-        return newMin;
+        return newState;
     }
 
 }
