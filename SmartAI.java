@@ -3,29 +3,32 @@ import java.util.ArrayList;
 public class SmartAI implements IOthelloAI {
 
     private boolean firstMove = true;
+    Eval v;
 
     @Override
     public Position decideMove(GameState s) {
 
-        ArrayList<Position> moves = s.legalMoves();
-
         int alphaMax = Integer.MAX_VALUE;
         int betaMin = Integer.MIN_VALUE;
 
-        if (firstMove && !moves.isEmpty()) {
-            this.firstMove = false;
-            return moves.get(0);
+        Position nextMove = MaxValue(s, alphaMax, betaMin, 3).getPosition();
+        if (nextMove == null) {
+            // Handle the case where no valid move was found
+            // This could involve throwing an exception, returning a default move, etc.
+            return s.legalMoves().get(0); // return a default Position
         } else {
-            return MaxValue(s, alphaMax, betaMin, 3).getPosition();
+            return nextMove;
         }
+
     }
 
     private Pair<Eval, Position> MaxValue(GameState s, int alpha, int beta, int depth) {
 
         Position move = null;
-        Eval v = new Eval(s, this);
+        v = new Eval(s, this);
 
         if (isCutOff(s, depth)) {
+            v.evaluate();
             return new Pair<Eval, Position>(v, null);
         }
 
@@ -35,10 +38,10 @@ public class SmartAI implements IOthelloAI {
             Pair<Eval, Position> pair = MinValue(Result(s, action), alpha, beta, depth - 1);
             int a = pair.getUtility().getHeuristic();
 
-            if (a >= v.getHeuristic()) {
+            if (a > v.getHeuristic()) {
                 v.setHeuristic(pair.getUtility().getHeuristic());
-                alpha = Integer.max(alpha, v.getHeuristic());
                 move = pair.getPosition();
+                alpha = Integer.max(alpha, v.getHeuristic());
             }
 
             if (v.getHeuristic() >= beta) {
@@ -52,10 +55,11 @@ public class SmartAI implements IOthelloAI {
     private Pair<Eval, Position> MinValue(GameState s, int alpha, int beta, int depth) {
 
         Position move = null;
-        Eval v = new Eval(s, this);
+        v = new Eval(s, this);
 
         if (isCutOff(s, depth)) {
-            return new Pair<Eval, Position>(v, new Position(0, 0));
+            v.evaluate();
+            return new Pair<Eval, Position>(v, null);
         }
 
         v.setHeuristic(Integer.MAX_VALUE);
@@ -64,9 +68,9 @@ public class SmartAI implements IOthelloAI {
             Pair<Eval, Position> pair = MaxValue(Result(s, action), alpha, beta, depth - 1);
             int a = pair.getUtility().getHeuristic();
 
-            if (a <= v.getHeuristic()) {
+            if (a < v.getHeuristic()) {
                 v.setHeuristic(pair.getUtility().getHeuristic());
-                beta = Integer.min(alpha, v.getHeuristic());
+                beta = Integer.min(beta, v.getHeuristic());
                 move = pair.getPosition();
             }
         }
@@ -81,15 +85,9 @@ public class SmartAI implements IOthelloAI {
 
     public GameState Result(GameState s, Position position) {
 
-        if (position == null) {
-            return s;
-        }
+        s.insertToken(position);
 
-        GameState newState = new GameState(s.getBoard(), s.currentPlayer);
-
-        newState.insertToken(position);
-
-        return newState;
+        return s;
     }
 
     /**
