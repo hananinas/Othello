@@ -2,24 +2,22 @@ import java.util.ArrayList;
 
 public class SmartAI implements IOthelloAI {
 
-    private boolean firstMove = true;
-    Eval v;
+    Pair<Eval, Position> pair;
 
     @Override
     public Position decideMove(GameState s) {
-        ArrayList<Position> moves = s.legalMoves();
 
         int alphaMax = Integer.MAX_VALUE;
         int betaMin = Integer.MIN_VALUE;
 
-        Position nextMove = MaxValue(s, alphaMax, betaMin, 3).getPosition();
-        if (nextMove == null) {
-            if (!moves.isEmpty()) {
-                return moves.get(0);
-            } else {
-                return new Position(-1, -1); // return a default Position
+        Position nextMove = MaxValue(s, alphaMax, betaMin, 10).getPosition();
 
-            }
+        if (nextMove == null) {
+            ArrayList<Position> moves = s.legalMoves();
+            if (!moves.isEmpty())
+                return moves.get(0);
+            else
+                return new Position(-1, -1);
         } else {
             return nextMove;
         }
@@ -28,73 +26,67 @@ public class SmartAI implements IOthelloAI {
 
     private Pair<Eval, Position> MaxValue(GameState s, int alpha, int beta, int depth) {
 
-        Position move = null;
-        v = new Eval(s, this);
+        pair = new Pair<Eval, Position>(new Eval(s, this), null);
 
         if (isCutOff(s, depth)) {
-            v.evaluate();
-            return new Pair<Eval, Position>(v, null);
+            pair.getEval().evaluate();
+            return pair;
         }
 
-        v.setHeuristic(Integer.MIN_VALUE);
+        pair.getEval().setHeuristic(Integer.MIN_VALUE);
 
         for (Position action : s.legalMoves()) {
-            Pair<Eval, Position> pair = MinValue(Result(s, action), alpha, beta, depth - 1);
-            int a = pair.getUtility().getHeuristic();
+            Pair<Eval, Position> pair2 = MinValue(Result(s, action), alpha, beta, depth - 1);
 
-            if (a > v.getHeuristic()) {
-                v.setHeuristic(pair.getUtility().getHeuristic());
-                move = pair.getPosition();
-                alpha = Integer.max(alpha, v.getHeuristic());
+            if (pair2.getEval().getHeuristic() > pair.getEval().getHeuristic()) {
+                pair.getEval().setHeuristic(pair2.getEval().getHeuristic());
+                pair.setPosition(action);
+                alpha = Integer.max(alpha, pair.getEval().getHeuristic());
             }
 
-            if (v.getHeuristic() >= beta) {
-                return new Pair<Eval, Position>(v, move);
+            if (pair.getEval().getHeuristic() >= beta) {
+                return pair;
             }
         }
 
-        return new Pair<Eval, Position>(v, move);
+        return pair;
+    }
+
+    private GameState Result(GameState s, Position action) {
+
+        GameState newState = new GameState(s.getBoard(), s.getPlayerInTurn());
+
+        newState.insertToken(action);
+
+        return newState;
     }
 
     private Pair<Eval, Position> MinValue(GameState s, int alpha, int beta, int depth) {
 
-        Position move = null;
-        v = new Eval(s, this);
+        pair = new Pair<Eval, Position>(new Eval(s, this), null);
 
         if (isCutOff(s, depth)) {
-            v.evaluate();
-            return new Pair<Eval, Position>(v, null);
+            pair.getEval().evaluate();
+            return pair;
         }
 
-        v.setHeuristic(Integer.MAX_VALUE);
+        pair.getEval().setHeuristic(Integer.MIN_VALUE);
 
         for (Position action : s.legalMoves()) {
-            Pair<Eval, Position> pair = MaxValue(Result(s, action), alpha, beta, depth - 1);
-            int a = pair.getUtility().getHeuristic();
+            Pair<Eval, Position> pair2 = MaxValue(Result(s, action), alpha, beta, depth - 1);
 
-            if (a < v.getHeuristic()) {
-                v.setHeuristic(pair.getUtility().getHeuristic());
-                beta = Integer.min(beta, v.getHeuristic());
-                move = pair.getPosition();
+            if (pair2.getEval().getHeuristic() < pair.getEval().getHeuristic()) {
+                pair.getEval().setHeuristic(pair2.getEval().getHeuristic());
+                pair.setPosition(action);
+                alpha = Integer.max(alpha, pair.getEval().getHeuristic());
+            }
+            if (pair.getEval().getHeuristic() <= alpha) {
+                return pair;
             }
         }
 
-        if (v.getHeuristic() <= alpha) {
-            return new Pair<Eval, Position>(v, move);
-        }
+        return pair;
 
-        return new Pair<Eval, Position>(v, move);
-
-    }
-
-    public GameState Result(GameState s, Position position) {
-        if (position == null) {
-            return s;
-        }
-
-        s.insertToken(position);
-
-        return s;
     }
 
     /**
@@ -110,9 +102,8 @@ public class SmartAI implements IOthelloAI {
         }
         if (depth == 0) {
             return true;
-        }
-
-        return false;
+        } else
+            return false;
 
     }
 
