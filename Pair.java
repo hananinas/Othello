@@ -1,15 +1,15 @@
 
 public class Pair<T1, T2> {
 
-    Utility T1;
+    Eval T1;
     Position T2;
 
-    public Pair(Utility utility, Position position) {
+    public Pair(Eval utility, Position position) {
         this.T1 = utility;
         this.T2 = position;
     }
 
-    public Utility getUtility() {
+    public Eval getUtility() {
         return this.T1;
     }
 
