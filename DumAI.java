@@ -14,6 +14,7 @@ public class DumAI implements IOthelloAI {
 	 */
 	public Position decideMove(GameState s) {
 		ArrayList<Position> moves = s.legalMoves();
+		System.out.println(moves);
 		if (!moves.isEmpty())
 			return moves.get(0);
 		else

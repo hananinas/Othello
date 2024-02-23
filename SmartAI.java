@@ -5,32 +5,32 @@ public class SmartAI implements IOthelloAI {
 
     @Override
     public Position decideMove(GameState s) {
-        ArrayList<Position> moves = s.legalMoves();
 
         if (s.getPlayerInTurn() == 1) {
-            return MiniMax(moves, s.legalMoves().getLast(), 3, true, s.isFinished());
+            return MiniMax(s, s.legalMoves().getLast(), 4, true);
         } else {
-            return MiniMax(moves, s.legalMoves().getLast(), 3, false, s.isFinished());
+            return MiniMax(s, s.legalMoves().getLast(), 4, false);
         }
     }
 
-    public Position MiniMax(ArrayList<Position> moves, Position position, int depth, boolean isMaximizingPlayer,
-            boolean state) {
-        if (depth == 0 || state) {
-            return moves.get(0);
+    public Position MiniMax(GameState s, Position position, int depth, boolean isMaximizingPlayer) {
+        if (depth == 0 || s.isFinished()) {
+            return s.legalMoves().get(0);
         } else if (isMaximizingPlayer) {
             Position max = new Position(Integer.MIN_VALUE, Integer.MIN_VALUE);
-            for (Position position1 : moves) {
-                Position eval = MiniMax(moves, position1, depth - 1, false, state);
+            for (Position position1 : s.legalMoves()) {
+                Position eval = MiniMax(s, position1, depth - 1, false);
                 max = findMax(max, eval);
+
             }
             return max;
         } else {
             Position min = new Position(Integer.MAX_VALUE, Integer.MAX_VALUE);
-            for (Position position2 : moves) {
-                Position eval = MiniMax(moves, position2, depth - 1, true, state);
+            for (Position position2 : s.legalMoves()) {
+                Position eval = MiniMax(s, position2, depth - 1, true);
                 min = findMin(min, eval);
             }
+
             return min;
         }
 
