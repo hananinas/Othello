@@ -14,7 +14,6 @@ public class SmartAI implements IOthelloAI {
 
         Position nextMove = MaxValue(s, alphaMax, betaMin, 3).getPosition();
         if (nextMove == null) {
-
             if (!moves.isEmpty()) {
                 return moves.get(0);
             } else {
@@ -89,8 +88,8 @@ public class SmartAI implements IOthelloAI {
     }
 
     public GameState Result(GameState s, Position position) {
-        if (position != null) {
-            System.out.println("invalid");
+        if (position == null) {
+            return s;
         }
 
         s.insertToken(position);
