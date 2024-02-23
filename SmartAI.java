@@ -7,15 +7,20 @@ public class SmartAI implements IOthelloAI {
 
     @Override
     public Position decideMove(GameState s) {
+        ArrayList<Position> moves = s.legalMoves();
 
         int alphaMax = Integer.MAX_VALUE;
         int betaMin = Integer.MIN_VALUE;
 
         Position nextMove = MaxValue(s, alphaMax, betaMin, 3).getPosition();
         if (nextMove == null) {
-            // Handle the case where no valid move was found
-            // This could involve throwing an exception, returning a default move, etc.
-            return s.legalMoves().get(0); // return a default Position
+
+            if (!moves.isEmpty()) {
+                return moves.get(0);
+            } else {
+                return new Position(-1, -1); // return a default Position
+
+            }
         } else {
             return nextMove;
         }
@@ -84,6 +89,9 @@ public class SmartAI implements IOthelloAI {
     }
 
     public GameState Result(GameState s, Position position) {
+        if (position != null) {
+            System.out.println("invalid");
+        }
 
         s.insertToken(position);
 
