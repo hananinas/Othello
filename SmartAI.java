@@ -4,69 +4,75 @@ public class SmartAI implements IOthelloAI {
 
     Pair<Eval, Position> pair;
 
+    private int depth = 10;
+
+    private int turn;
+
+    private int size;
+
     @Override
     public Position decideMove(GameState s) {
 
-        int alphaMax = Integer.MAX_VALUE;
-        int betaMin = Integer.MIN_VALUE;
+        var pair = search(s);
 
-        int v = Integer.MIN_VALUE;
-        Position bestMove = null;
+        return pair.getPosition();
+
+    }
+
+    private Pair<Eval, Position> search(GameState s) {
+        size = s.getBoard().length;
+
+        var pair = new Pair<Eval, Position>(new Eval(s, this), null);
+        turn = s.getPlayerInTurn();
 
         var moves = s.legalMoves();
 
         for (Position move : moves) {
-            var duplicate = new GameState(s.getBoard(), s.getPlayerInTurn());
-            duplicate.insertToken(move);
 
-            int value = MinValue(duplicate, alphaMax, betaMin, 10);
+            var value = depth == 0 ? minValue(Result(s, move), Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1)
+                    : eval(s);
 
-            if (value > alphaMax) {
-
+            if (value > pair.getEval().getValue()) {
+                pair.getEval().setValue(value);
+                pair.setPosition(move);
             }
-
         }
 
-        Pair<Eval, Position> nextMove = MaxValue(s, alphaMax, betaMin, 10);
-
-        return nextMove.getPosition();
+        return pair;
     }
 
-    private Pair<Eval, Position> MaxValue(GameState s, int alpha, int beta, int depth) {
-
-        pair = new Pair<Eval, Position>(new Eval(s, this), null);
+    private int maxValue(GameState s, int alpha, int beta, int depth) {
 
         var moves = s.legalMoves();
 
         if (isCutOff(s, depth)) {
-            pair.getEval().evaluate();
-            return pair;
+
+            return getValue(s);
         }
 
         // If there are no legal moves, change player and return the value of the next
         // player
         if (moves.size() == 0) {
             s.changePlayer();
-            return MinValue(s, depth, alpha, beta);
+            return minValue(s, depth, alpha, beta);
         }
 
-        pair.getEval().setHeuristic(Integer.MIN_VALUE);
+        int v = Integer.MIN_VALUE;
 
         for (Position action : s.legalMoves()) {
-            Pair<Eval, Position> pair2 = MinValue(Result(s, action), alpha, beta, depth - 1);
 
-            if (pair2.getEval().getHeuristic() > pair.getEval().getHeuristic()) {
-                pair.getEval().setHeuristic(pair2.getEval().getHeuristic());
-                pair.setPosition(action);
-                alpha = Integer.max(alpha, pair.getEval().getHeuristic());
+            var newValue = depth == 0 ? minValue(Result(s, action), Math.max(alpha, v), beta, depth - 1) : eval(s);
+
+            if (newValue > v) {
+                v = newValue;
             }
 
-            if (pair.getEval().getHeuristic() >= beta) {
-                return pair;
+            if (newValue >= beta) {
+                return v;
             }
         }
 
-        return pair;
+        return v;
     }
 
     private GameState Result(GameState s, Position action) {
@@ -78,31 +84,37 @@ public class SmartAI implements IOthelloAI {
         return duplicate;
     }
 
-    private Pair<Eval, Position> MinValue(GameState s, int alpha, int beta, int depth) {
-
-        pair = new Pair<Eval, Position>(new Eval(s, this), null);
+    private int minValue(GameState s, int alpha, int beta, int depth) {
+        var moves = s.legalMoves();
 
         if (isCutOff(s, depth)) {
-            pair.getEval().evaluate();
-            return pair;
+            return getValue(s);
+
         }
 
-        pair.getEval().setHeuristic(Integer.MIN_VALUE); // Changed from Integer.MAX_VALUE to Integer.MIN_VALUE
+        // If there are no legal moves, change player and return the value of the next
+        // player
+        if (moves.size() == 0) {
+            s.changePlayer();
+            return maxValue(s, depth, alpha, beta);
+        }
+
+        int v = Integer.MIN_VALUE;
 
         for (Position action : s.legalMoves()) {
-            Pair<Eval, Position> pair2 = MaxValue(Result(s, action), alpha, beta, depth - 1);
 
-            if (pair2.getEval().getHeuristic() < pair.getEval().getHeuristic()) {
-                pair.getEval().setHeuristic(pair2.getEval().getHeuristic());
-                pair.setPosition(action);
-                beta = Integer.min(beta, pair.getEval().getHeuristic()); // This should be beta, not alpha
+            var newValue = maxValue(Result(s, action), alpha, Math.min(alpha, v), depth - 1);
+
+            if (newValue < v) {
+                v = newValue;
             }
-            if (pair.getEval().getHeuristic() <= alpha) {
-                return pair;
+
+            if (newValue <= alpha) {
+                return v;
             }
         }
 
-        return pair;
+        return v;
 
     }
 
@@ -122,6 +134,33 @@ public class SmartAI implements IOthelloAI {
         } else
             return false;
 
+    }
+
+    private int getValue(GameState s) {
+        int[] tokens = s.countTokens();
+        return 1000 * (tokens[turn - 1] - tokens[turn % 2]);
+    }
+
+    private int eval(GameState s) {
+        int[][] board = s.getBoard();
+        int[] tokens = s.countTokens();
+        int c = size - 1;
+        int cVal = 50;
+        int tokenValue = tokens[turn - 1] - tokens[turn % 2];
+        int placementValue = v(board[0][0], cVal) +
+                v(board[0][c], cVal) +
+                v(board[c][0], cVal) +
+                v(board[c][c], cVal) +
+                v(board[1][1], -cVal) +
+                v(board[1][c - 1], -cVal) +
+                v(board[c - 1][1], -cVal) +
+                v(board[c - 1][c - 1], -cVal);
+        float tpr = (tokens[0] + tokens[1]) / 64f; // Tokens placed ratio
+        return (int) (10 * tokenValue * (tpr - 0.4f) + placementValue * (1 - tpr));
+    }
+
+    private int v(int tokenColor, int value) {
+        return tokenColor == turn ? value : tokenColor == ((turn % 2) + 1) ? -value : 0;
     }
 
 }

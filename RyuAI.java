@@ -66,7 +66,7 @@ public class RyuAI implements IOthelloAI {
             var duplicate = new GameState(s.getBoard(), s.getPlayerInTurn());
             duplicate.insertToken(move);
 
-            int value = depth < maxDepth ? maxValue(duplicate, depth, Math.min(alpha, v), beta) : eval(s);
+            int value = depth < maxDepth ? maxValue(duplicate, depth, alpha, Math.min(beta, v)) : eval(s);
 
             if (value < v) {
                 v = value;
