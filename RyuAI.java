@@ -13,7 +13,7 @@ public class RyuAI implements IOthelloAI {
     }
 
     /**
-     * 
+     * This function will search for the next best move to do for the (AI) player.
      * @param s the class to represent the state of a game of Othello.
      * @return a Pair with the best calculated position for the next move, and its associated value.
      */
@@ -43,20 +43,37 @@ public class RyuAI implements IOthelloAI {
                 bestAc = action;
             }
         }
-        
+
         return new Pair<>(bestV, bestAc);
     }
 
+    /**
+     * Evaluates the game state for the minimizing player.
+     * @param s the class to represent the state of a game of Othello.
+     * @param depth the maximum depth the algorithm will look for in the tree.
+     * @param alpha best value for the maximizing player (starts as Integer.MIN_VALUE).
+     * @param beta best value for the minimizing player (starts as Integer.MAX_VALUE).
+     * @return the value of the current node being checked.
+     */
     private int minValue(GameState s, int depth, int alpha, int beta) {
+
+        // if no other available moves exists for both players, then goto eval(s) (where 's' is the gamestate)
         if (s.isFinished())
             return eval(s);
 
+        // if no other available moves exists for the current player, then switch player
         if (s.legalMoves().isEmpty()) {
             s.changePlayer();
             return maxValue(s, depth, alpha, beta);
         }
 
         int v = Integer.MAX_VALUE;
+
+        /**
+         * While maximum depth hasn't been reached, look for the next minimum value.
+         * If the next calculated value (here 'v') isn't less than/equal to alpha,
+         * then continue to look at other legal actions.
+         */
         for (Position action : s.legalMoves()) {
             GameState duplicate = new GameState(s.getBoard(), turn);
             duplicate.insertToken(action);
@@ -68,16 +85,33 @@ public class RyuAI implements IOthelloAI {
         return v;
     }
 
+    /**
+     * Evaluates the game state for the maximizing player.
+     * @param s the class to represent the state of a game of Othello.
+     * @param depth the maximum depth the algorithm will look for in the tree.
+     * @param alpha best value for the maximizing player (starts as Integer.MIN_VALUE).
+     * @param beta best value for the minimizing player (starts as Integer.MAX_VALUE).
+     * @return the value of the current node being checked.
+     */
     private int maxValue(GameState s, int depth, int alpha, int beta) {
+
+        // if no other available moves exists for both players, then goto eval(s) (where 's' is the gamestate)
         if (s.isFinished())
             return eval(s);
 
+        // if no other available moves exists for the current player, then switch player
         if (s.legalMoves().isEmpty()) {
             s.changePlayer();
             return minValue(s, depth, alpha, beta);
         }
 
         int v = Integer.MIN_VALUE;
+
+        /**
+         * While maximum depth hasn't been reached, look for the next maximum value.
+         * If the next calculated value (here 'v') isn't more than/equal to beta,
+         * then continue to look at other legal actions.
+         */
         for (Position action : s.legalMoves()) {
             GameState duplicate = new GameState(s.getBoard(), turn);
             duplicate.insertToken(action);
@@ -89,6 +123,12 @@ public class RyuAI implements IOthelloAI {
         return v;
     }
 
+    /**
+     * Evaluate the desirability of the given gamestate.
+     * @param s the class to represent the state of a game of Othello.
+     * @return an integer value, which can be interpreted as the desirable value of the current state,
+     * the player is in. 
+     */
     private int eval(GameState s) {
         int[][] board = s.getBoard();
         int[] tokens = s.countTokens();
@@ -166,6 +206,9 @@ public class RyuAI implements IOthelloAI {
         }
     }
 
+    /**
+     * A type for reading/writing a position and its associated value
+     */
     public class Pair<T1, T2> {
 
         int T1;
