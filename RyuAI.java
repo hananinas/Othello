@@ -12,21 +12,38 @@ public class RyuAI implements IOthelloAI {
         return move.T2;
     }
 
+    /**
+     * 
+     * @param s the class to represent the state of a game of Othello.
+     * @return a Pair with the best calculated position for the next move, and its associated value.
+     */
     private Pair<Integer, Position> searchBestMove(GameState s) {
         turn = s.getPlayerInTurn();
+
+        // equivalent to initializing alpha to NEGATIVE INFINITY
         int bestV = Integer.MIN_VALUE;
+
         size = s.getBoard().length;
+
+        // the best found action (next position to move) so far, initialized to none
         Position bestAc = null;
 
+        /*
+         * for every legal action (move) available in the gamestate s, a value v is given to minValue,
+         * in order to prune and avoid searching for nodes the AI knows will be useless
+         */
         for (Position action : s.legalMoves()) {
             GameState duplicate = new GameState(s.getBoard(), turn);
             duplicate.insertToken(action);
             int v = minValue(duplicate, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+            // is the currently checked action (move) better than the previously saved?
             if (v > bestV) {
                 bestV = v;
                 bestAc = action;
             }
         }
+        
         return new Pair<>(bestV, bestAc);
     }
 
