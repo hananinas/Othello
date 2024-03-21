@@ -1,27 +1,37 @@
+// Class representing an AI player
 public class RyuAI implements IOthelloAI {
 
     private int turn;
-    private final int maxDepth = 6;
+    private final int maxDepth = 6; // Set the maximum depth of the search tree
     private int size;
 
+    // Method to decide the next move
     public Position decideMove(GameState s) {
-        var start = System.nanoTime();
+        // var start = System.nanoTime();
 
         Pair<Integer, Position> move = searchBestMove(s);
 
         return move.T2;
     }
 
+    // Method to search for the best move using minimax algorithm
     private Pair<Integer, Position> searchBestMove(GameState s) {
         turn = s.getPlayerInTurn();
         int bestV = Integer.MIN_VALUE;
         size = s.getBoard().length;
         Position bestAc = null;
 
+        // Loop through all legal moves
         for (Position action : s.legalMoves()) {
+
+            // Make a duplicate of the current state and apply the move
             GameState duplicate = new GameState(s.getBoard(), turn);
             duplicate.insertToken(action);
+
+            // Calculate the value of the move using minimax
             int v = minValue(duplicate, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+            // Update the best value and best action if necessary
             if (v > bestV) {
                 bestV = v;
                 bestAc = action;
@@ -30,27 +40,44 @@ public class RyuAI implements IOthelloAI {
         return new Pair<>(bestV, bestAc);
     }
 
+    // Min-value function for minimax algorithm
     private int minValue(GameState s, int depth, int alpha, int beta) {
-        if (s.isFinished())
-            return eval(s);
 
+        // Check if the game is finished
+        if (s.isFinished())
+            return eval(s); // Return the evaluation of the terminal game state
+
+        // Check if no legal moves are available for the current player
         if (s.legalMoves().isEmpty()) {
+            // Switch to the next player's turn
             s.changePlayer();
             return maxValue(s, depth, alpha, beta);
         }
 
         int v = Integer.MAX_VALUE;
         for (Position action : s.legalMoves()) {
+            // Create a duplicate game state
             GameState duplicate = new GameState(s.getBoard(), turn);
+
+            // Apply the current action to the duplicate state
             duplicate.insertToken(action);
+
+            // Recursively call maxValue with increased depth, unless the maximum depth is
+            // reached (cut-off), in which case, evaluate the game state directly
             int value = (depth + 1) < maxDepth ? maxValue(duplicate, depth + 1, alpha, v) : eval(s);
+
+            // Update the minimum value
             v = Math.min(v, value);
             if (v <= alpha)
-                return v;
+                return v; // Cut-off (alpha-beta pruning) the search if the value is less than or equal to
+                          // alpha
         }
+
+        // Return the minimum value
         return v;
     }
 
+    // Max-value function for minimax algorithm
     private int maxValue(GameState s, int depth, int alpha, int beta) {
         if (s.isFinished())
             return eval(s);
@@ -69,23 +96,32 @@ public class RyuAI implements IOthelloAI {
             if (v >= beta)
                 return v;
         }
+
+        // Return the maximum value
         return v;
     }
 
+    // Evaluation function for the current state
     private int eval(GameState s) {
         int[][] board = s.getBoard();
         int[] tokens = s.countTokens();
 
+        // Difference in token count between players
         int tokenValue = tokens[turn - 1] - tokens[turn % 2];
 
+        // Ratio of total tokens played to total board size
         float tpr = (tokens[0] + tokens[1]) / 64f;
 
+        // Evaluate the placement of tokens on the board
         int placementValue = calculatePlacementValue(board);
 
+        // Combined evaluation score
         return (int) (10 * tokenValue * (tpr - 0.5f) + placementValue * (1 - tpr));
     }
 
+    // Helper method to calculate placement value based on board position
     private int calculatePlacementValue(int[][] board) {
+        // Define values for different board positions
         final int cornerValue = 100;
         final int adjacentCornerValue = -25;
         final int edgeValue = 10;
@@ -139,6 +175,8 @@ public class RyuAI implements IOthelloAI {
         return score;
     }
 
+    // Helper method to calculate value based on the current player and the value of
+    // a square
     private int v(int currentPlayer, int value) {
         if (currentPlayer == turn) {
             return value;
@@ -149,15 +187,15 @@ public class RyuAI implements IOthelloAI {
         }
     }
 
+    // Inner class representing a pair of objects
     public class Pair<T1, T2> {
-
         int T1;
         Position T2;
 
+        // Constructor to initialize the pair with a value and a position
         public Pair(int value, Position position) {
             this.T1 = value;
             this.T2 = position;
         }
-
     }
 }
