@@ -3,7 +3,7 @@ public class Eval {
 
     GameState state;
     IOthelloAI ai;
-    private int value = Integer.MIN_VALUE;
+    private int value;
 
     public Eval(GameState s, IOthelloAI ai) {
         this.state = s;
