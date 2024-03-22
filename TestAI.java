@@ -208,7 +208,7 @@ public class TestAI implements IOthelloAI {
         // of each color
         float tpr = (tokens[0] + tokens[1]) / 64f;
         int tokenDiff = tokens[turn - 1] - tokens[turn % 2];
-        float tokenEval = 10 * tokenDiff * (tpr - 0.4f);
+        float tokenEval = 10 * tokenDiff * (tpr - 0.45f);
 
         // combine placementValue and tokenEval to return final score
         return (int) (tokenEval + placementValue * (1 - tpr));

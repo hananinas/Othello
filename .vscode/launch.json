@@ -12,9 +12,8 @@
             "name": "Othello",
             "request": "launch",
             "mainClass": "Othello",
-            // "projectName": "Othello_42fbf7e4",
-            "projectName": "Othello_f6d6371e",
-            "args": ["DumAI", "RyuAI" ]
+            "projectName": "Othello_42fbf7e4",
+            "args": ["TestAI", "RyuAI" ]
         }
     ]
 }

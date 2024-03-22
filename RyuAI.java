@@ -8,14 +8,25 @@ public class RyuAI implements IOthelloAI {
         var start = System.nanoTime();
 
         Pair<Integer, Position> move = searchBestMove(s);
+        var stop = System.nanoTime();
+
+        float time = (stop - start) / 1000000000f;
+
+        String side = turn == 1 ? "Black" : "White";
+
+        System.out.println(
+                side + ": " + "Position evaluated: " + move.T2 + " Value: " + move.T1 +
+                        " | Time: " + time + "s");
 
         return move.T2;
     }
 
     /**
      * This function will search for the next best move to do for the (AI) player.
+     * 
      * @param s the class to represent the state of a game of Othello.
-     * @return a Pair with the best calculated position for the next move, and its associated value.
+     * @return a Pair with the best calculated position for the next move, and its
+     *         associated value.
      */
     private Pair<Integer, Position> searchBestMove(GameState s) {
         turn = s.getPlayerInTurn();
@@ -29,7 +40,8 @@ public class RyuAI implements IOthelloAI {
         Position bestAc = null;
 
         /*
-         * for every legal action (move) available in the gamestate s, a value v is given to minValue,
+         * for every legal action (move) available in the gamestate s, a value v is
+         * given to minValue,
          * in order to prune and avoid searching for nodes the AI knows will be useless
          */
         for (Position action : s.legalMoves()) {
@@ -49,15 +61,19 @@ public class RyuAI implements IOthelloAI {
 
     /**
      * Evaluates the game state for the minimizing player.
-     * @param s the class to represent the state of a game of Othello.
+     * 
+     * @param s     the class to represent the state of a game of Othello.
      * @param depth the maximum depth the algorithm will look for in the tree.
-     * @param alpha best value for the maximizing player (starts as Integer.MIN_VALUE).
-     * @param beta best value for the minimizing player (starts as Integer.MAX_VALUE).
+     * @param alpha best value for the maximizing player (starts as
+     *              Integer.MIN_VALUE).
+     * @param beta  best value for the minimizing player (starts as
+     *              Integer.MAX_VALUE).
      * @return the value of the current node being checked.
      */
     private int minValue(GameState s, int depth, int alpha, int beta) {
 
-        // if no other available moves exists for both players, then goto eval(s) (where 's' is the gamestate)
+        // if no other available moves exists for both players, then goto eval(s) (where
+        // 's' is the gamestate)
         if (s.isFinished())
             return eval(s);
 
@@ -87,15 +103,19 @@ public class RyuAI implements IOthelloAI {
 
     /**
      * Evaluates the game state for the maximizing player.
-     * @param s the class to represent the state of a game of Othello.
+     * 
+     * @param s     the class to represent the state of a game of Othello.
      * @param depth the maximum depth the algorithm will look for in the tree.
-     * @param alpha best value for the maximizing player (starts as Integer.MIN_VALUE).
-     * @param beta best value for the minimizing player (starts as Integer.MAX_VALUE).
+     * @param alpha best value for the maximizing player (starts as
+     *              Integer.MIN_VALUE).
+     * @param beta  best value for the minimizing player (starts as
+     *              Integer.MAX_VALUE).
      * @return the value of the current node being checked.
      */
     private int maxValue(GameState s, int depth, int alpha, int beta) {
 
-        // if no other available moves exists for both players, then goto eval(s) (where 's' is the gamestate)
+        // if no other available moves exists for both players, then goto eval(s) (where
+        // 's' is the gamestate)
         if (s.isFinished())
             return eval(s);
 
@@ -125,9 +145,11 @@ public class RyuAI implements IOthelloAI {
 
     /**
      * Evaluate the desirability of the given gamestate.
+     * 
      * @param s the class to represent the state of a game of Othello.
-     * @return an integer value, which can be interpreted as the desirable value of the current state,
-     * the player is in. 
+     * @return an integer value, which can be interpreted as the desirable value of
+     *         the current state,
+     *         the player is in.
      */
     private int eval(GameState s) {
         int[][] board = s.getBoard();
@@ -135,11 +157,9 @@ public class RyuAI implements IOthelloAI {
 
         int tokenValue = tokens[turn - 1] - tokens[turn % 2];
 
-        float tpr = (tokens[0] + tokens[1]) / 64f;
-
         int placementValue = calculatePlacementValue(board);
 
-        return (int) (10 * tokenValue * (tpr - 0.5f) + placementValue * (1 - tpr));
+        return (tokenValue + placementValue);
     }
 
     private int calculatePlacementValue(int[][] board) {
@@ -151,57 +171,69 @@ public class RyuAI implements IOthelloAI {
         int score = 0;
 
         // Evaluate corners
-        score += v(board[0][0], cornerValue);
-        score += v(board[0][size - 1], cornerValue);
-        score += v(board[size - 1][0], cornerValue);
-        score += v(board[size - 1][size - 1], cornerValue);
+        score += checkPlayer(board[0][0], cornerValue);
+        score += checkPlayer(board[0][size - 1], cornerValue);
+        score += checkPlayer(board[size - 1][0], cornerValue);
+        score += checkPlayer(board[size - 1][size - 1], cornerValue);
 
         // Evaluate squares adjacent to corners
         if (board[0][0] == 0) { // Top-left corner is empty
-            score += v(board[0][1], adjacentCornerValue);
-            score += v(board[1][0], adjacentCornerValue);
-            score += v(board[1][1], adjacentCornerValue);
+            score += checkPlayer(board[0][1], adjacentCornerValue);
+            score += checkPlayer(board[1][0], adjacentCornerValue);
+            score += checkPlayer(board[1][1], adjacentCornerValue);
         }
         if (board[0][size - 1] == 0) { // Top-right corner is empty
-            score += v(board[0][size - 2], adjacentCornerValue);
-            score += v(board[1][size - 1], adjacentCornerValue);
-            score += v(board[1][size - 2], adjacentCornerValue);
+            score += checkPlayer(board[0][size - 2], adjacentCornerValue);
+            score += checkPlayer(board[1][size - 1], adjacentCornerValue);
+            score += checkPlayer(board[1][size - 2], adjacentCornerValue);
         }
         if (board[size - 1][0] == 0) { // Bottom-left corner is empty
-            score += v(board[size - 2][0], adjacentCornerValue);
-            score += v(board[size - 2][1], adjacentCornerValue);
-            score += v(board[size - 1][1], adjacentCornerValue);
+            score += checkPlayer(board[size - 2][0], adjacentCornerValue);
+            score += checkPlayer(board[size - 2][1], adjacentCornerValue);
+            score += checkPlayer(board[size - 1][1], adjacentCornerValue);
         }
         if (board[size - 1][size - 1] == 0) { // Bottom-right corner is empty
-            score += v(board[size - 2][size - 1], adjacentCornerValue);
-            score += v(board[size - 2][size - 2], adjacentCornerValue);
-            score += v(board[size - 1][size - 2], adjacentCornerValue);
+            score += checkPlayer(board[size - 2][size - 1], adjacentCornerValue);
+            score += checkPlayer(board[size - 2][size - 2], adjacentCornerValue);
+            score += checkPlayer(board[size - 1][size - 2], adjacentCornerValue);
         }
 
         // Evaluate edges
         for (int i = 1; i < size - 1; i++) {
-            score += v(board[0][i], edgeValue); // Top edge
-            score += v(board[size - 1][i], edgeValue); // Bottom edge
-            score += v(board[i][0], edgeValue); // Left edge
-            score += v(board[i][size - 1], edgeValue); // Right edge
+            score += checkPlayer(board[0][i], edgeValue); // Top edge
+            score += checkPlayer(board[size - 1][i], edgeValue); // Bottom edge
+            score += checkPlayer(board[i][0], edgeValue); // Left edge
+            score += checkPlayer(board[i][size - 1], edgeValue); // Right edge
         }
 
         // Evaluate center squares
         for (int i = 2; i < size - 2; i++) {
             for (int j = 2; j < size - 2; j++) {
-                score += v(board[i][j], centerValue);
+                score += checkPlayer(board[i][j], centerValue);
             }
         }
 
         return score;
     }
 
-    private int v(int currentPlayer, int value) {
+    /**
+     * Returns a value based on whether a token is of the current player's color,
+     * the
+     * opponent's color, or neither.
+     * 
+     * @param currentPlayer the current player.
+     * @param value         the value to return if the token is of the current
+     *                      player's color.
+     * @return the value of the token.
+     */
+    private int checkPlayer(int currentPlayer, int value) {
+
         if (currentPlayer == turn) {
             return value;
         } else if (currentPlayer != 0 && currentPlayer != turn) {
             return -value;
         } else {
+
             return 0;
         }
     }
