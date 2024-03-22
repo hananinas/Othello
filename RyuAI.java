@@ -1,7 +1,7 @@
 public class RyuAI implements IOthelloAI {
 
     private int turn;
-    private final int maxDepth = 6;
+    private final int maxDepth = 8;
     private int size;
 
     public Position decideMove(GameState s) {
